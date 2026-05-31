@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <link href="https://db.onlinewebfonts.com/c/04e6981992c0e2e7642af2074ebe3901?family=Helvetica+Now+Display+Bold" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
   --heading: 'Helvetica Now Display Bold',sans-serif;
@@ -602,6 +603,11 @@ navItems.forEach((item, i) => {
 });
 
 // ===== FEEDBACK SYSTEM =====
+// 👇 Replace these with your Supabase project values
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const adjectives = ['Swift','Calm','Bold','Crisp','Neon','Lunar','Solar','Wild','Quiet','Rapid','Deep','Bright','Fuzzy','Keen','Noble','Prime','Rare','Safe','Epic','Zen'];
 const nouns = ['Panda','Fox','Owl','Wolf','Hawk','Elk','Bear','Crab','Moth','Seal','Finch','Lynx','Wren','Dove','Oryx','Tern','Ibex','Mole','Buck','Crow'];
 
@@ -609,23 +615,23 @@ function randomUsername() {
   return adjectives[Math.floor(Math.random() * adjectives.length)] + nouns[Math.floor(Math.random() * nouns.length)] + Math.floor(Math.random() * 99);
 }
 
-function loadFeedback() {
-  try { return JSON.parse(localStorage.getItem('ngs_feedback') || '[]'); }
-  catch { return []; }
+async function fetchFeedback() {
+  const { data, error } = await supabase
+    .from('feedback')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data.map(f => ({ user: f.user_name, text: f.text, date: f.date }));
 }
 
-function saveFeedback(fb) {
-  localStorage.setItem('ngs_feedback', JSON.stringify(fb));
-}
-
-function renderFeedback() {
+async function renderFeedback() {
   const list = document.getElementById('feedbackList');
-  const fb = loadFeedback();
+  const fb = await fetchFeedback();
   if (fb.length === 0) {
     list.innerHTML = '<p style="font-size:12px;opacity:0.5;text-align:center;padding:20px 0">No feedback yet. Be the first!</p>';
     return;
   }
-  list.innerHTML = fb.slice().reverse().map(f => `
+  list.innerHTML = fb.map(f => `
     <div class="feedback-item">
       <div class="feedback-user">${f.user}</div>
       <div class="feedback-text">${escapeHtml(f.text)}</div>
@@ -652,12 +658,12 @@ fbInput.addEventListener('input', () => {
   fbSubmit.disabled = fbInput.value.trim().length < 3;
 });
 
-fbSubmit.addEventListener('click', () => {
+fbSubmit.addEventListener('click', async () => {
   const text = fbInput.value.trim();
   if (text.length < 3) return;
-  const fb = loadFeedback();
-  fb.push({ user: currentUser, text, date: new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) + ' ' + new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }) });
-  saveFeedback(fb);
+  const date = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) + ' ' + new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  const { error } = await supabase.from('feedback').insert({ user_name: currentUser, text, date });
+  if (error) { console.error(error); return; }
   fbInput.value = '';
   fbSubmit.disabled = true;
   currentUser = randomUsername();
