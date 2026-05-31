@@ -8,10 +8,20 @@
     'rock.png': 'wall', 'stone_1.png': 'wall', 'wood.png': 'wall',
     'normalglass.png': 'wall', 'brokenglass.png': 'hazard',
     'bush.png': 'path', 'grass_1.png': 'path', 'ground.png': 'path',
-    'empty.png': 'path', 'tnt.png': 'hazard', 'food-png.png': 'goal',
+    'empty.png': 'path', 'tnt.png': 'hazard',
+    'food-png.png': 'goal',
     'water.png': 'goal', 'passenger.png': 'goal',
     'ball.png': 'goal', 'burger.png': 'goal', 'laddoo.png': 'goal',
+    'boatland_3.png': 'wall', 'boatland_4.png': 'wall',
+    'waterBoatToTheShore.png': 'path',
+    'floor-1.png': 'path', 'floor.png': 'path',
+    'tile 2.png': 'wall', 'tile-1.png': 'wall',
+    'shore.png': 'goal',
   };
+
+  function decodeFilename(name) {
+    try { return decodeURIComponent(name); } catch(e) { return name; }
+  }
 
   let gameState = null;
 
@@ -33,8 +43,10 @@
       for (let j = 0; j < cols; j++) {
         const idx = i * cols + j;
         if (idx >= total) { row.push('path'); continue; }
-        const filename = (cells[idx].src || '').split('/').pop();
-        row.push(TERRAIN_MAP[filename] || 'path');
+        const filename = decodeFilename((cells[idx].src || '').split('/').pop());
+        const terrain = TERRAIN_MAP[filename] || 'path';
+        row.push(terrain);
+        if (terrain === 'goal') goalPos = { x: j, y: i };
       }
       grid.push(row);
     }
@@ -64,18 +76,10 @@
       };
     }
 
-    if (!playerPos || !goalPos) {
-      for (let y = 0; y < rows && (!playerPos || !goalPos); y++) {
-        for (let x = 0; x < cols && (!playerPos || !goalPos); x++) {
-          const idx = y * cols + x;
-          if (idx >= total) continue;
-          const filename = (cells[idx].src || '').split('/').pop();
-          if (!goalPos && (filename === 'water.png' || filename === 'passenger.png' ||
-              filename === 'ball.png' || filename === 'burger.png' ||
-              filename === 'laddoo.png' || filename === 'car.png' ||
-              filename === 'food-png.png')) {
-            goalPos = { x, y };
-          }
+    if (!goalPos) {
+      for (let y = 0; y < rows && !goalPos; y++) {
+        for (let x = 0; x < cols && !goalPos; x++) {
+          if (grid[y][x] === 'goal') goalPos = { x, y };
         }
       }
     }
@@ -114,7 +118,8 @@
         const [dx, dy] = dirs[di];
         const nx = cur.x + dx, ny = cur.y + dy;
         if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
-        if (grid[ny][nx] === 'wall') continue;
+        const isGoal = nx === goal.x && ny === goal.y;
+        if (grid[ny][nx] === 'wall' && !isGoal) continue;
         const turnCost = (cur.dir !== -1 && cur.dir !== di) ? TURN_PENALTY : 0;
         const nc = cost[cur.y][cur.x] + 1 + turnCost;
         if (nc < cost[ny][nx]) {
@@ -169,24 +174,28 @@
   }
 
   function detectAvailableBlocks(workspace) {
-    const candidates = [
-      'move_forward', 'turn_left', 'turn_right', 'turn_block',
-      'controls_repeat', 'repeat_until', 'repeat_n',
-      'if_path_ahead', 'if_else',
-    ];
     const available = [];
-    for (const t of candidates) {
-      try { workspace.newBlock(t); available.push(t); }
-      catch (e) { /* not available */ }
+    const tree = workspace.options && workspace.options.languageTree;
+    if (tree && tree.contents) {
+      tree.contents.forEach(item => {
+        if (item.type) available.push(item.type);
+      });
+    }
+    if (available.length === 0) {
+      const candidates = ['move_forward', 'turn_left', 'turn_right', 'turn_block',
+        'fixed_repeat', 'repeat_block', 'controls_repeat'];
+      for (const t of candidates) {
+        try { workspace.newBlock(t); available.push(t); } catch (e) {}
+      }
+      workspace.clear();
     }
     return available;
   }
 
-  function connectBlocks(parentBlock, childBlock, inputName) {
-    const input = parentBlock.getInput(inputName || 'DO');
-    if (input && input.connection) {
-      return input.connection.connect(childBlock.previousConnection);
-    }
+  function findRepeatType(available) {
+    if (available.includes('fixed_repeat')) return 'fixed_repeat';
+    if (available.includes('repeat_block')) return 'repeat_block';
+    if (available.includes('controls_repeat')) return 'controls_repeat';
     return null;
   }
 
@@ -196,50 +205,63 @@
       blk.initSvg(); blk.render();
       return blk;
     }
-    if (op === 'left' && available.includes('turn_left')) {
+    const hasTurnBlock = available.includes('turn_block');
+    const hasTurnLeft = available.includes('turn_left');
+    const hasTurnRight = available.includes('turn_right');
+
+    if (op === 'left' && hasTurnLeft) {
       const blk = workspace.newBlock('turn_left');
       blk.initSvg(); blk.render();
       return blk;
     }
-    if (op === 'right' && available.includes('turn_right')) {
+    if (op === 'right' && hasTurnRight) {
       const blk = workspace.newBlock('turn_right');
       blk.initSvg(); blk.render();
       return blk;
     }
-    if ((op === 'left' || op === 'right') && available.includes('turn_block')) {
+    if ((op === 'left' || op === 'right') && hasTurnBlock) {
       const blk = workspace.newBlock('turn_block');
       const dirField = blk.getField('direction');
-      if (dirField) dirField.setValue(op === 'left' ? 'turnLeft' : 'turnRight');
+      if (dirField) dirField.setValue(op === 'left' ? 'turnLeft()' : 'turnRight()');
       blk.initSvg(); blk.render();
       return blk;
     }
     return null;
   }
 
-  function injectRepeatBlock(repeatSpec, workspace) {
-    const repeat = workspace.newBlock('controls_repeat');
-    const timesField = repeat.getField('TIMES');
-    if (timesField) timesField.setValue(String(repeatSpec.count));
-    repeat.initSvg();
-    repeat.render();
+  function injectRepeatBlock(repeatSpec, workspace, repeatType) {
+    const blk = workspace.newBlock(repeatType);
+    if (repeatType === 'fixed_repeat') {
+      const timesField = blk.getField('num_input');
+      if (timesField) timesField.setValue(String(repeatSpec.count));
+    } else if (repeatType === 'controls_repeat') {
+      const timesField = blk.getField('TIMES');
+      if (timesField) timesField.setValue(String(repeatSpec.count));
+    }
+    blk.initSvg();
+    blk.render();
+
+    const bodyInputName = repeatType === 'fixed_repeat' ? 'for_statement' :
+                          repeatType === 'repeat_block' ? 'inside_repeat' : 'DO';
+
     if (repeatSpec.body && repeatSpec.body.length > 0) {
       let prevBody = null;
       for (const b of repeatSpec.body) {
-        const blk = workspace.newBlock(b.type);
-        blk.initSvg(); blk.render();
+        const bodyBlk = workspace.newBlock(b.type);
+        bodyBlk.initSvg(); bodyBlk.render();
         if (prevBody) {
-          prevBody.nextConnection && blk.previousConnection &&
-            prevBody.nextConnection.connect(blk.previousConnection);
+          prevBody.nextConnection && bodyBlk.previousConnection &&
+            prevBody.nextConnection.connect(bodyBlk.previousConnection);
         }
-        prevBody = blk;
+        prevBody = bodyBlk;
       }
       if (prevBody) {
-        const doInput = repeat.getInput('DO');
-        doInput && doInput.connection && prevBody.previousConnection &&
-          doInput.connection.connect(prevBody.previousConnection);
+        const input = blk.getInput(bodyInputName);
+        input && input.connection && prevBody.previousConnection &&
+          input.connection.connect(prevBody.previousConnection);
       }
     }
-    return repeat;
+    return blk;
   }
 
   function injectOpSequence(ops, available, workspace) {
@@ -261,15 +283,17 @@
     try {
       workspace.clear();
 
-      if (blocks.type === 'repeat_n' && available.includes('controls_repeat')) {
-        injectRepeatBlock(blocks, workspace);
+      const repeatType = findRepeatType(available);
+
+      if (blocks.type === 'repeat_n' && repeatType) {
+        injectRepeatBlock(blocks, workspace, repeatType);
       } else if (blocks.type === 'sequence') {
         injectOpSequence(blocks.blocks, available, workspace);
       } else if (blocks.type === 'mixed') {
         let prevBlock = null;
         for (const part of blocks.parts) {
-          if (typeof part === 'object' && part.type === 'repeat_n') {
-            const repeat = injectRepeatBlock(part, workspace);
+          if (typeof part === 'object' && part.type === 'repeat_n' && repeatType) {
+            const repeat = injectRepeatBlock(part, workspace, repeatType);
             if (repeat && prevBlock) {
               prevBlock.nextConnection && repeat.previousConnection &&
                 prevBlock.nextConnection.connect(repeat.previousConnection);
@@ -322,7 +346,12 @@
   function buildBlockSequence(dirs, available) {
     const hasTurnLeft = available.includes('turn_left') || available.includes('turn_block');
     const hasTurnRight = available.includes('turn_right') || available.includes('turn_block');
-    const hasRepeat = available.includes('controls_repeat');
+    const repeatType = findRepeatType(available);
+    const hasRepeat = !!repeatType;
+
+    if (!hasTurnLeft && !hasTurnRight) {
+      return { type: 'sequence', blocks: dirs.map(() => 'forward') };
+    }
 
     let facing = detectInitialDirection();
     const ops = [];
@@ -345,9 +374,6 @@
     }
 
     if (hasRepeat) {
-      if (ops.length >= 2 && ops.every(o => o === 'forward')) {
-        return { type: 'repeat_n', count: ops.length, body: [{ type: 'move_forward' }] };
-      }
       let bestStart = -1, bestLen = 0, curStart = -1, curLen = 0;
       for (let i = 0; i < ops.length; i++) {
         if (ops[i] === 'forward') {
