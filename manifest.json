@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Newton Auto Game Solver",
+  "version": "1.0.0",
+  "description": "Automatically solves Newton School block-based coding games using pathfinding and Blockly injection.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://learn.newtonschool.co/block-games/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://learn.newtonschool.co/block-games/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [{
+    "resources": ["solver.js"],
+    "matches": ["https://learn.newtonschool.co/*"]
+  }],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Newton Auto Game Solver",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
