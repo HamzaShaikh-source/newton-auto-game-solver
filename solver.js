@@ -8,7 +8,7 @@
     'rock.png': 'wall', 'stone_1.png': 'wall', 'wood.png': 'wall',
     'normalglass.png': 'wall', 'brokenglass.png': 'hazard',
     'bush.png': 'path', 'grass_1.png': 'path', 'ground.png': 'path',
-    'empty.png': 'path', 'tnt.png': 'hazard',
+    'empty.png': 'path', 'tnt.png': 'hazard', 'food-png.png': 'goal',
     'water.png': 'goal', 'passenger.png': 'goal',
     'ball.png': 'goal', 'burger.png': 'goal', 'laddoo.png': 'goal',
   };
@@ -72,7 +72,8 @@
           const filename = (cells[idx].src || '').split('/').pop();
           if (!goalPos && (filename === 'water.png' || filename === 'passenger.png' ||
               filename === 'ball.png' || filename === 'burger.png' ||
-              filename === 'laddoo.png' || filename === 'car.png')) {
+              filename === 'laddoo.png' || filename === 'car.png' ||
+              filename === 'food-png.png')) {
             goalPos = { x, y };
           }
         }
@@ -169,7 +170,7 @@
 
   function detectAvailableBlocks(workspace) {
     const candidates = [
-      'move_forward', 'turn_left', 'turn_right',
+      'move_forward', 'turn_left', 'turn_right', 'turn_block',
       'controls_repeat', 'repeat_until', 'repeat_n',
       'if_path_ahead', 'if_else',
     ];
@@ -202,6 +203,13 @@
     }
     if (op === 'right' && available.includes('turn_right')) {
       const blk = workspace.newBlock('turn_right');
+      blk.initSvg(); blk.render();
+      return blk;
+    }
+    if ((op === 'left' || op === 'right') && available.includes('turn_block')) {
+      const blk = workspace.newBlock('turn_block');
+      const dirField = blk.getField('direction');
+      if (dirField) dirField.setValue(op === 'left' ? 'turnLeft' : 'turnRight');
       blk.initSvg(); blk.render();
       return blk;
     }
@@ -312,8 +320,8 @@
   }
 
   function buildBlockSequence(dirs, available) {
-    const hasTurnLeft = available.includes('turn_left');
-    const hasTurnRight = available.includes('turn_right');
+    const hasTurnLeft = available.includes('turn_left') || available.includes('turn_block');
+    const hasTurnRight = available.includes('turn_right') || available.includes('turn_block');
     const hasRepeat = available.includes('controls_repeat');
 
     let facing = detectInitialDirection();
