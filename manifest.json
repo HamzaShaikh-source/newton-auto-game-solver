@@ -3,7 +3,7 @@
   "name": "Newton Auto Game Solver",
   "version": "1.0.0",
   "description": "Automatically solves Newton School block-based coding games using pathfinding and Blockly injection.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "activeTab"],
   "host_permissions": [
     "https://learn.newtonschool.co/block-games/*"
   ],
