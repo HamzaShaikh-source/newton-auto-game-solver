@@ -5,18 +5,22 @@
   "description": "Automatically solves Newton School block-based coding games using pathfinding and Blockly injection.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": [
-    "https://learn.newtonschool.co/block-games/*"
+    "https://learn.newtonschool.co/*",
+    "https://my.newtonschool.co/*"
   ],
   "content_scripts": [
     {
-      "matches": ["https://learn.newtonschool.co/block-games/*"],
+      "matches": [
+        "https://learn.newtonschool.co/block-games/*",
+        "https://my.newtonschool.co/playground/game/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_end"
     }
   ],
   "web_accessible_resources": [{
     "resources": ["solver.js"],
-    "matches": ["https://learn.newtonschool.co/*"]
+    "matches": ["https://learn.newtonschool.co/*", "https://my.newtonschool.co/*"]
   }],
   "action": {
     "default_popup": "popup.html",

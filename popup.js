@@ -8,7 +8,10 @@ const gridContainer = document.getElementById('gridContainer');
 async function sendMsg(action) {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.url || !tab.url.includes('learn.newtonschool.co/block-games')) return null;
+    if (!tab || !tab.url) return null;
+    const ok = tab.url.includes('learn.newtonschool.co/block-games') ||
+               tab.url.includes('my.newtonschool.co/playground/game');
+    if (!ok) return null;
     return await chrome.tabs.sendMessage(tab.id, { action });
   } catch { return null; }
 }
@@ -76,8 +79,11 @@ async function refreshStatus() {
 }
 
 solveBtn.addEventListener('click', async () => {
-  const tab = (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
-  if (!tab || !tab.url || !tab.url.includes('learn.newtonschool.co/block-games')) return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab || !tab.url) return;
+  const ok = tab.url.includes('learn.newtonschool.co/block-games') ||
+             tab.url.includes('my.newtonschool.co/playground/game');
+  if (!ok) return;
   solveBtn.disabled = true;
   solveBtn.textContent = 'Solving...';
   await chrome.tabs.sendMessage(tab.id, { action: 'solve' });
