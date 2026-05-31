@@ -15,7 +15,8 @@
         "https://my.newtonschool.co/playground/game/*"
       ],
       "js": ["content.js"],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "all_frames": true
     }
   ],
   "web_accessible_resources": [{
