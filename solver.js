@@ -15,7 +15,7 @@
     'boatland_3.png': 'wall', 'boatland_4.png': 'wall',
     'waterBoatToTheShore.png': 'path',
     'floor-1.png': 'path', 'floor.png': 'path',
-    'tile 2.png': 'wall', 'tile-1.png': 'wall',
+    'tile 2.png': 'path', 'tile-1.png': 'path',
     'shore.png': 'goal',
   };
 
@@ -43,7 +43,7 @@
       for (let j = 0; j < cols; j++) {
         const idx = i * cols + j;
         if (idx >= total) { row.push('path'); continue; }
-        const filename = decodeFilename((cells[idx].src || '').split('/').pop());
+        const filename = decodeFilename((cells[idx].src || '').split('/').pop()).toLowerCase();
         const terrain = TERRAIN_MAP[filename] || 'path';
         row.push(terrain);
         if (terrain === 'goal') goalPos = { x: j, y: i };
@@ -244,6 +244,7 @@
 
   function findRepeatType(available) {
     if (available.includes('fixed_repeat')) return 'fixed_repeat';
+    if (available.includes('repeat_block')) return 'repeat_block';
     if (available.includes('controls_repeat')) return 'controls_repeat';
     return null;
   }
