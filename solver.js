@@ -88,6 +88,30 @@
     return gameState;
   }
 
+  function readBlockBudget() {
+    const el = document.querySelector('[class*="blockLimitDisplay"]');
+    if (!el) return null;
+    const match = el.textContent.trim().match(/BLOCKS\s*LEFT\s*:\s*(\d+)/i);
+    return match ? parseInt(match[1]) : null;
+  }
+
+  function countBlocks(blocks) {
+    if (blocks.type === 'repeat_n') {
+      return 1;
+    }
+    if (blocks.type === 'sequence') {
+      return blocks.blocks.length;
+    }
+    if (blocks.type === 'mixed') {
+      let count = 0;
+      for (const part of blocks.parts) {
+        count += (typeof part === 'object' && part.type === 'repeat_n') ? 1 : 1;
+      }
+      return count;
+    }
+    return 0;
+  }
+
   function findPath() {
     if (!gameState || !gameState.player || !gameState.goal) return null;
     const { grid, rows, cols, player, goal } = gameState;
@@ -343,14 +367,15 @@
     return 1;
   }
 
-  function buildBlockSequence(dirs, available) {
+  function buildBlockSequence(dirs, available, budget) {
     const hasTurnLeft = available.includes('turn_left') || available.includes('turn_block');
     const hasTurnRight = available.includes('turn_right') || available.includes('turn_block');
     const repeatType = findRepeatType(available);
     const hasRepeat = !!repeatType;
 
     if (!hasTurnLeft && !hasTurnRight) {
-      return { type: 'sequence', blocks: dirs.map(() => 'forward') };
+      const seq = { type: 'sequence', blocks: dirs.map(() => 'forward') };
+      return seq;
     }
 
     let facing = detectInitialDirection();
@@ -386,6 +411,25 @@
       }
       if (curLen > bestLen && curLen > 2) { bestStart = curStart; bestLen = curLen; }
 
+      // If budget is tight, try more aggressive repeat usage
+      if (budget !== null) {
+        let fullRepeat = true;
+        let i = 0;
+        while (i < ops.length) {
+          if (ops[i] === 'forward') {
+            let run = 0;
+            while (i + run < ops.length && ops[i + run] === 'forward') run++;
+            if (run <= 2) { fullRepeat = false; break; }
+            i += run;
+          } else {
+            i++;
+          }
+        }
+        if (fullRepeat) {
+          return { type: 'repeat_n', count: ops.filter(o => o === 'forward').length, body: [{ type: 'move_forward' }] };
+        }
+      }
+
       if (bestStart !== -1) {
         const parts = [];
         let i = 0;
@@ -409,18 +453,36 @@
     readGameState();
     if (!gameState || !gameState.player || !gameState.goal) return null;
 
+    const budget = readBlockBudget();
     const path = findPath();
     if (!path) return null;
 
     const workspace = findBlocklyWorkspace();
-    if (!workspace) return { path, error: 'workspace not found' };
+    if (!workspace) return { path, error: 'workspace not found', budget };
 
     const available = detectAvailableBlocks(workspace);
     const hasMove = available.includes('move_forward');
-    if (!hasMove) return { path, error: 'no move_forward block available' };
+    if (!hasMove) return { path, error: 'no move_forward block available', budget };
 
     const dirs = computeDirectionChanges(path);
-    const blocks = buildBlockSequence(dirs, available);
+    const blocks = buildBlockSequence(dirs, available, budget);
+    const blockCount = countBlocks(blocks);
+
+    if (budget !== null && blockCount > budget) {
+      return {
+        path: path.map(p => ({ x: p.x, y: p.y })),
+        blocks,
+        budget,
+        blockCount,
+        budgetExceeded: true,
+        error: `Solution needs ${blockCount} blocks, but budget is ${budget}`,
+        availableBlocks: available,
+        grid: { rows: gameState.rows, cols: gameState.cols },
+        player: gameState.player,
+        goal: gameState.goal,
+      };
+    }
+
     const result = injectBlocks(blocks, available);
 
     return {
@@ -428,6 +490,8 @@
       blocks,
       injectionResult: result,
       availableBlocks: available,
+      budget,
+      blockCount,
       grid: { rows: gameState.rows, cols: gameState.cols },
       player: gameState.player,
       goal: gameState.goal,
