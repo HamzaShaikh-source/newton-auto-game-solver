@@ -272,7 +272,15 @@
     if ((op === 'left' || op === 'right') && hasTurnBlock) {
       const blk = workspace.newBlock('turn_block');
       const dirField = blk.getField('direction');
-      if (dirField) dirField.setValue(op === 'left' ? 'turnLeft()' : 'turnRight()');
+      if (dirField) {
+        const val = op === 'left' ? 'turnLeft()' : 'turnRight()';
+        dirField.setValue(val);
+        if (dirField.getValue() !== val) {
+          dirField.setValue(op === 'left' ? 'turnLeft' : 'turnRight');
+        }
+      }
+      const angleField = blk.getField('angle');
+      if (angleField) angleField.setValue('90');
       blk.initSvg(); blk.render();
       return blk;
     }
