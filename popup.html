@@ -1,108 +1,135 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      width: 320px;
-      font-family: 'SF Mono', 'Consolas', monospace;
+      width: 340px;
+      font-family: 'Inter', -apple-system, sans-serif;
       background: #0d1117;
       color: #e6edf3;
-      padding: 16px;
+      padding: 0;
       font-size: 12px;
     }
-    h1 {
-      font-size: 14px;
-      color: #58a6ff;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .header {
+      padding: 16px 16px 0;
+      display: flex; align-items: center; justify-content: space-between;
     }
-    .status {
-      padding: 10px 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      font-size: 11px;
+    .header h1 {
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+      letter-spacing: -0.01em;
     }
-    .ready { background: #0d2818; border: 1px solid #238636; color: #3fb950; }
-    .error { background: #2d1010; border: 1px solid #da3633; color: #f85149; }
-    .info  { background: #0d2333; border: 1px solid #1f6feb; color: #58a6ff; }
+    .header h1 svg { width: 18px; height: 18px; }
+    .header .badge {
+      font-size: 9px; font-weight: 700;
+      background: rgba(115,66,226,0.15); color: #7c5cfc;
+      padding: 2px 8px; border-radius: 50px;
+      letter-spacing: 0.03em;
+    }
+    .section { padding: 12px 16px; }
+    .status-bar {
+      padding: 10px 14px; border-radius: 10px;
+      font-size: 11px; font-weight: 500;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .status-ready { background: #0d2818; border: 1px solid #238636; color: #3fb950; }
+    .status-error { background: #2d1010; border: 1px solid #da3633; color: #f85149; }
+    .status-info  { background: #0d2333; border: 1px solid #1f6feb; color: #58a6ff; }
     .btn {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #2d3548;
-      border-radius: 8px;
-      background: #151b23;
-      color: #e6edf3;
-      font-family: inherit;
-      font-size: 12px;
-      cursor: pointer;
-      margin-bottom: 8px;
-      text-align: center;
-      transition: all 0.15s;
+      display: block; width: 100%; padding: 10px;
+      border: 1px solid #2d3548; border-radius: 10px;
+      background: #151b23; color: #e6edf3;
+      font-family: inherit; font-size: 12px; font-weight: 500;
+      cursor: pointer; margin-bottom: 6px; text-align: center;
+      transition: all 0.15s; text-decoration: none;
     }
     .btn:hover { background: #1c2333; border-color: #58a6ff; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn.primary { background: #1f3a5f; border-color: #58a6ff; color: #58a6ff; }
-    .btn.primary:hover { background: #58a6ff; color: #0d1117; }
-    .btn.success { background: #1a3a2a; border-color: #3fb950; color: #3fb950; }
-    .btn.success:hover { background: #3fb950; color: #0d1117; }
+    .btn-primary { background: #1f3a5f; border-color: #58a6ff; color: #58a6ff; }
+    .btn-primary:hover { background: #58a6ff; color: #0d1117; }
+    .btn-success { background: #1a3a2a; border-color: #3fb950; color: #3fb950; }
+    .btn-success:hover { background: #3fb950; color: #0d1117; }
+    .btn-outline { background: transparent; border-color: #2d3548; }
+    .btn-outline:hover { border-color: #8b949e; }
+    .btn-accent { background: rgba(115,66,226,0.15); border-color: #7c5cfc; color: #b088ff; }
+    .btn-accent:hover { background: #7c5cfc; color: #fff; }
     .result-box {
-      background: #151b23;
-      border: 1px solid #2d3548;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 8px;
-      font-size: 10px;
-      line-height: 1.6;
-      max-height: 180px;
-      overflow-y: auto;
+      background: #151b23; border: 1px solid #2d3548;
+      border-radius: 10px; padding: 10px 12px;
+      margin-top: 8px; font-size: 10px; line-height: 1.7;
+      max-height: 160px; overflow-y: auto;
     }
-    .result-box .label { color: #8b949e; }
-    .result-box .value { color: #ffd700; }
-    .footer {
-      margin-top: 12px;
-      font-size: 9px;
-      color: #545d70;
-      text-align: center;
-    }
-    .game-grid {
-      display: grid;
-      gap: 1px;
-      margin: 8px 0;
-    }
-    .game-grid .cell {
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 1px;
-    }
+    .result-box .lbl { color: #8b949e; }
+    .result-box .val { color: #ffd700; }
+    .result-box .val-ok { color: #3fb950; }
+    .result-box .val-bad { color: #f85149; }
+    .game-grid { display: grid; gap: 1px; margin: 6px 0; }
+    .game-grid .cell { width: 100%; aspect-ratio: 1; border-radius: 1px; }
     .wall-cell { background: #1c2333; }
     .path-cell { background: #0d1117; }
     .goal-cell { background: #238636; }
     .player-cell { background: #58a6ff; }
     .hazard-cell { background: #da3633; }
+    .footer {
+      padding: 10px 16px 14px;
+      font-size: 9px; color: #545d70;
+      text-align: center; border-top: 1px solid #1c2333;
+      display: flex; justify-content: center; gap: 12px;
+    }
+    .footer a { color: #545d70; text-decoration: none; }
+    .footer a:hover { color: #8b949e; }
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <h1>🤖 Newton Auto Solver</h1>
-
-  <div id="status" class="status info">⏳ Checking game page...</div>
-
-  <button id="solveBtn" class="btn primary" disabled>🧠 Auto-Solve This Level</button>
-
-  <div id="resultArea" style="display:none">
-    <div class="result-box" id="resultContent"></div>
+  <div class="header">
+    <h1>
+      <svg viewBox="0 0 256 256" fill="none"><path d="M64 128h.5L32 95 0 64V0h64l64 64v.5L161 32 192 0h64v64l-64 64h-64v64l-32 31-32.5 33H0v-64zm192 64-32 31-32.5 33H128v-64l64-64h64z" fill="#7c5cfc"/></svg>
+      Game Solver
+    </h1>
+    <span class="badge">v1.0 BETA</span>
   </div>
 
-  <div id="gridPreview" style="display:none;margin-top:8px">
-    <div style="color:#8b949e;font-size:10px;margin-bottom:4px">Map Preview:</div>
-    <div id="gridContainer" class="game-grid"></div>
+  <div class="section">
+    <div id="status" class="status-bar status-info">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Checking game page...</span>
+    </div>
+
+    <button id="solveBtn" class="btn btn-primary" disabled>
+      <span style="display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Auto-Solve This Level
+      </span>
+    </button>
+
+    <div id="resultArea" style="display:none">
+      <div class="result-box" id="resultContent"></div>
+    </div>
+
+    <div id="gridPreview" style="display:none">
+      <div style="color:#8b949e;font-size:10px;margin-bottom:4px;font-weight:500">Grid Preview</div>
+      <div id="gridContainer" class="game-grid"></div>
+    </div>
   </div>
 
-  <div class="footer">Newton School Block Games · v1.0.0</div>
+  <div class="section" style="padding-top:0">
+    <a id="devNoticeBtn" href="#" target="_blank" class="btn btn-accent" style="display:flex;align-items:center;justify-content:center;gap:6px">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="10" x2="10" y1="15" y2="9"/><line x1="14" x2="14" y1="15" y2="9"/></svg>
+      Dev Notice &amp; Project Status
+    </a>
+  </div>
+
+  <div class="footer">
+    <a href="https://github.com/HamzaShaikh-source/newton-auto-game-solver" target="_blank">GitHub</a>
+    <span>Newton School Block Games</span>
+  </div>
 
   <script src="popup.js"></script>
 </body>

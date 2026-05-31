@@ -1,5 +1,11 @@
 # Newton Auto Game Solver
 
+> ⚠️ **BETA — Development Paused**
+>
+> This extension is a work-in-progress beta. It works for basic levels but **does not yet reliably solve advanced levels** with complex conditional logic. The developer has put further development on hold until gaining a deeper understanding of the game engine and Blockly integration. Contributions and ideas are welcome, but expect incomplete coverage.
+>
+> 📄 **[Read the full project status & rationale →](https://hamzashaikh-source.github.io/newton-auto-game-solver/)
+
 A Chrome extension that automatically solves Newton School's block-based coding games using DOM parsing, BFS pathfinding, and Blockly workspace injection.
 
 ## How It Works
@@ -101,11 +107,23 @@ Blockly's API is bundled inside Next.js chunks and not globally exposed. The ext
 ### Turn Optimization
 The direction-to-blocks converter minimizes the number of turn blocks by choosing between left and right rotations (always turning the shorter way).
 
-## Limitations
+## Known Limitations
 
+- **Advanced levels unsupported** — Levels requiring `if/else`, `repeat until`, or wall-follower logic often fail due to incorrect iteration counts and direction detection bugs
 - The class names with hashes (e.g., `Uber_map_element__lgLxt`) may change if Newton School updates their build system — the extension would need selector updates
 - Block type names in Blockly (`move_forward`, `turn_left`, etc.) are inferred and may vary per game
 - Complex games with `if/else` and `repeat until` blocks use simplified path representations (turn + move sequence) without full control flow optimization yet
+- Player direction detection (`detectInitialDirection`) has fallback values that may be incorrect for some game/level combinations
+- Wall-follower algorithm repeat counts don't account for the difference between simulation steps and generated loop iterations, causing overshoot past the goal
+
+## Deployment
+
+The project hub page (`index.html`) can be deployed as a static site:
+
+- **GitHub Pages**: Push to repo, enable Pages from the root of `main` branch
+- **Netlify**: Drag `index.html` (and all files) to Netlify Drop, or connect the Git repo
+
+The Chrome extension files (`manifest.json`, `content.js`, `solver.js`, `popup.html`, `popup.js`) are independent and must be loaded as an unpacked extension regardless of where the hub page is deployed.
 
 ## License
 

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Newton Auto Game Solver — Project Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<link href="https://db.onlinewebfonts.com/c/04e6981992c0e2e7642af2074ebe3901?family=Helvetica+Now+Display+Bold" rel="stylesheet" type="text/css" />
+<style>
+:root {
+  --heading: 'Helvetica Now Display Bold',sans-serif;
+  --body: 'Inter',sans-serif;
+  --bg: #ffffff;
+  --bg-alt: #F2F2EE;
+  --text: #192837;
+  --text-muted: rgba(25,40,55,0.7);
+  --accent: #7342E2;
+  --accent-light: rgba(115,66,226,0.1);
+  --card-bg: rgba(25,40,55,0.04);
+  --border: rgba(25,40,55,0.1);
+  --overlay: rgba(255,255,255,0.55);
+  --blur: blur(2px);
+  --nav-bg: transparent;
+  --sheet-bg: #CFC8C5;
+}
+.dark {
+  --bg: #0d1117;
+  --bg-alt: #161b22;
+  --text: #e6edf3;
+  --text-muted: rgba(230,237,243,0.6);
+  --accent: #7c5cfc;
+  --accent-light: rgba(124,92,252,0.15);
+  --card-bg: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --overlay: rgba(0,0,0,0.65);
+  --blur: blur(4px);
+  --nav-bg: rgba(13,17,23,0.85);
+  --sheet-bg: #1c2333;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:var(--body);color:var(--text);background:var(--bg);
+  overflow-x:hidden;transition:background 0.3s,color 0.3s;
+  min-height:100vh;
+}
+.nav-desktop{display:none}@media(min-width:768px){.nav-desktop{display:flex}}
+.nav-mobile{display:flex}@media(min-width:768px){.nav-mobile{display:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.page{display:none;animation:fadeIn 0.4s ease both}
+.page.active{display:block}
+.page-content{animation:fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both}
+.icon{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.icon-sm{width:16px;height:16px}
+.icon-lg{width:24px;height:24px}
+.inline-icon{display:inline-flex;vertical-align:middle;margin:0 2px;position:relative;top:-2px}
+.sheet{transform:translateX(100%);transition:transform 0.45s cubic-bezier(0.22,1,0.36,1)}
+.sheet.open{transform:translateX(0)}
+.backdrop{opacity:0;transition:opacity 0.25s ease;pointer-events:none}
+.backdrop.open{opacity:1;pointer-events:auto}
+.cta-btn{display:inline-flex;align-items:center;justify-content:space-between;background:var(--accent);color:#fff;border-radius:50px;padding:14px 22px;font-weight:600;font-size:clamp(0.85rem,2vw,0.95rem);text-decoration:none;box-shadow:0 4px 24px rgba(115,66,226,0.28);min-width:180px;gap:24px;cursor:pointer;transition:transform 0.2s,filter 0.2s;border:none}
+.cta-btn:hover{transform:scale(1.04);filter:brightness(1.1)}
+.cta-btn:active{transform:scale(0.96)}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:14px}
+.tag{display:inline-block;background:var(--accent-light);color:var(--accent);border-radius:50px;padding:2px 10px;font-size:11px;font-weight:600}
+.theme-btn{background:none;border:1px solid var(--border);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);transition:all 0.2s}
+.theme-btn:hover{background:var(--card-bg)}
+.feedback-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.feedback-item:last-child{border-bottom:none}
+.feedback-user{font-weight:600;font-size:12px;color:var(--accent);margin-bottom:2px}
+.feedback-text{font-size:13px;line-height:1.5;opacity:0.85}
+.feedback-date{font-size:10px;opacity:0.45;margin-top:4px}
+textarea.fb-input{width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--body);font-size:13px;color:var(--text);resize:vertical;min-height:80px}
+textarea.fb-input:focus{outline:none;border-color:var(--accent)}
+.submit-btn{background:var(--accent);color:#fff;border:none;border-radius:50px;padding:10px 22px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s}
+.submit-btn:hover{filter:brightness(1.1)}
+.submit-btn:disabled{opacity:0.5;cursor:not-allowed}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{background:var(--card-bg);padding:1px 5px;border-radius:4px;font-size:0.9em}
+pre{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;font-size:12px;line-height:1.6;margin:8px 0}
+.file-header{font-weight:600;font-size:14px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.file-header .icon{color:var(--accent)}
+.log-date{color:var(--accent);font-weight:600;font-size:12px;min-width:90px}
+.log-status{display:inline-block;border-radius:50px;padding:1px 8px;font-size:10px;font-weight:600}
+.log-resolved{background:rgba(59,201,92,0.15);color:#3bc95c}
+.log-current{background:rgba(255,165,0,0.15);color:orange}
+</style>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<div id="app" style="position:relative;width:100%;min-height:100vh;font-family:var(--body);color:var(--text);background:var(--bg);transition:background 0.3s,color 0.3s">
+
+<!-- Background Video -->
+<video autoplay muted loop playsinline style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0">
+  <source src="https://d8jnt0lcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260518_003132_8b7edcb6-c64d-4a52-a9ca-879942e122ad.mp4" type="video/mp4" />
+</video>
+
+<!-- Overlay -->
+<div id="bgOverlay" style="position:fixed;inset:0;background:var(--overlay);backdrop-filter:var(--blur);z-index:1;transition:background 0.3s"></div>
+
+<!-- Navbar -->
+<nav style="position:relative;z-index:10;max-width:1280px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:background 0.3s">
+  <div style="display:flex;align-items:center;gap:10px">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 256 256"><path d="M64 128h.5L32 95 0 64V0h64l64 64v.5L161 32 192 0h64v64l-64 64h-64v64l-32 31-32.5 33H0v-64zm192 64-32 31-32.5 33H128v-64l64-64h64z" fill="var(--accent)"/></svg>
+    <span style="font-family:var(--heading);font-size:15px;letter-spacing:-0.01em">GAME SOLVER</span>
+  </div>
+
+  <div class="nav-desktop" style="align-items:center;gap:6px">
+    <a href="#status" class="nav-link" style="padding:6px 14px;font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;color:var(--text-muted);transition:all 0.2s">Status</a>
+    <a href="#games" class="nav-link" style="padding:6px 14px;font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;color:var(--text-muted);transition:all 0.2s">Games</a>
+    <a href="#log" class="nav-link" style="padding:6px 14px;font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;color:var(--text-muted);transition:all 0.2s">Log</a>
+    <a href="#feedback" class="nav-link" style="padding:6px 14px;font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;color:var(--text-muted);transition:all 0.2s">Feedback</a>
+    <a href="#repo" class="nav-link" style="padding:6px 14px;font-size:13px;font-weight:500;border-radius:8px;text-decoration:none;color:var(--text-muted);transition:all 0.2s">Repo</a>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px">
+    <button id="themeToggle" class="theme-btn" title="Toggle dark mode">
+      <svg class="icon" viewBox="0 0 24 24" id="sunIcon"><circle cx="12" cy="12" r="5"/><line x1="12" x2="12" y1="1" y2="3"/><line x1="12" x2="12" y1="21" y2="23"/><line x1="4.22" x2="5.64" y1="4.22" y2="5.64"/><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"/><line x1="1" x2="3" y1="12" y2="12"/><line x1="21" x2="23" y1="12" y2="12"/><line x1="4.22" x2="5.64" y1="19.78" y2="18.36"/><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"/></svg>
+      <svg class="icon" viewBox="0 0 24 24" id="moonIcon" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-mobile" id="menuBtn" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div id="backdrop" class="backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.35);backdrop-filter:blur(4px);z-index:40" onclick="closeMenu()"></div>
+<div id="sheet" class="sheet" style="position:fixed;right:0;top:0;width:min(88vw,360px);height:100dvh;background:var(--sheet-bg);box-shadow:-12px 0 48px rgba(0,0,0,0.18);z-index:50;display:flex;flex-direction:column;padding:20px 24px;transition:background 0.3s">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 256 256"><path d="M64 128h.5L32 95 0 64V0h64l64 64v.5L161 32 192 0h64v64l-64 64h-64v64l-32 31-32.5 33H0v-64zm192 64-32 31-32.5 33H128v-64l64-64h64z" fill="var(--accent)"/></svg>
+      <span style="font-family:var(--heading);font-size:16px;letter-spacing:-0.01em">GAME SOLVER</span>
+    </div>
+    <button onclick="closeMenu()" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text)">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
+  <div style="height:1px;background:var(--border);margin-bottom:24px"></div>
+  <div id="menuItems"></div>
+  <div style="flex:1"></div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-top:20px">
+    <a href="https://github.com/HamzaShaikh-source/newton-auto-game-solver" target="_blank" rel="noopener" style="background:var(--accent);color:#fff;border-radius:50px;padding:12px 0;text-align:center;font-weight:600;font-size:13px;text-decoration:none">View on GitHub</a>
+  </div>
+</div>
+
+<!-- Page Container -->
+<div style="position:relative;z-index:5;max-width:1100px;margin:0 auto;padding:clamp(24px,5vw,48px) 24px">
+
+  <!-- ===== STATUS PAGE ===== -->
+  <div id="page-status" class="page active">
+    <div class="page-content" style="max-width:720px">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--accent-light);border-radius:50px;padding:5px 12px 5px 5px;margin-bottom:18px;font-size:11px;font-weight:600">
+        <span style="background:var(--accent);color:#fff;border-radius:50px;padding:2px 8px;font-size:10px">BETA</span>
+        <span style="color:var(--accent)">Development Paused</span>
+      </div>
+
+      <h1 style="font-family:var(--heading);font-size:clamp(1.5rem,4.5vw,2.6rem);line-height:1.05;letter-spacing:-0.01em;margin-bottom:18px">
+        <span class="inline-icon"><svg class="icon-lg" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+        When Simple Ideas Become
+        <span style="color:var(--accent)">Deep Learning<span class="inline-icon"><svg class="icon-lg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/></svg></span></span>
+      </h1>
+
+      <p style="font-size:clamp(0.85rem,2.2vw,1rem);line-height:1.65;opacity:0.8;max-width:560px;margin-bottom:18px">
+        This project started as a quick experiment &mdash; "how hard can auto-solving block games be?" Turns out, it's a rabbit hole that touches BFS pathfinding, DOM parsing, React fiber internals, Blockly's API model, and maze-solving heuristics. Six unique games, each with its own block set, terrain rules, and edge cases.
+      </p>
+
+      <div class="card" style="border-left:3px solid var(--accent)">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <svg class="icon" viewBox="0 0 24 24" color="var(--accent)" style="margin-top:1px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="10" x2="10" y1="15" y2="9"/><line x1="14" x2="14" y1="15" y2="9"/></svg>
+          <div>
+            <p style="font-weight:600;font-size:13px;margin-bottom:4px">Why is development paused?</p>
+            <p style="font-size:12px;line-height:1.6;opacity:0.75">
+              The developer stepped back to focus on personal growth &mdash; deepening foundational CS knowledge, exploring systems-level programming, and building stronger engineering habits. This project was always a learning vehicle, and sometimes the best way to move forward is to pause, reflect, and level up the fundamentals first.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px">
+        <p style="font-weight:600;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <svg class="icon-sm" viewBox="0 0 24 24" color="var(--accent)"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          What makes this interesting
+        </p>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+          <div style="display:flex;align-items:center;gap:8px;opacity:0.8">
+            <svg class="icon-sm" viewBox="0 0 24 24" color="var(--accent)"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span>BFS Pathfinding &mdash; Classic CS on real DOM grids with wall/hazard traversal</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;opacity:0.8">
+            <svg class="icon-sm" viewBox="0 0 24 24" color="var(--accent)"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M1 9h3"/><path d="M1 15h3"/><path d="M20 9h3"/><path d="M20 15h3"/></svg>
+            <span>React Fiber Internals &mdash; Walking the fiber tree for Blockly workspace injection</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;opacity:0.8">
+            <svg class="icon-sm" viewBox="0 0 24 24" color="var(--accent)"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            <span>6 Diverse Games &mdash; Unique block sets, terrain types, and goal mechanics</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;opacity:0.8">
+            <svg class="icon-sm" viewBox="0 0 24 24" color="var(--accent)"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+            <span>Maze-Solving Heuristics &mdash; Wall-follower with cycle detection and conditional blocks</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;opacity:0.8">
+            <svg class="icon-sm" viewBox="0 0 24 24" color="var(--accent)"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="12" y2="12"/><line x1="18" x2="22" y1="16" y2="16"/></svg>
+            <span>DOM Terrain Parsing &mdash; Mapping image filenames to game semantics</span>
+          </div>
+        </div>
+      </div>
+
+      <a href="https://github.com/HamzaShaikh-source/newton-auto-game-solver" target="_blank" class="cta-btn" style="margin-bottom:8px">
+        <span>Explore the Repo</span>
+        <svg class="icon" viewBox="0 0 24 24" color="#fff"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </a>
+      <p style="margin-top:32px;font-size:11px;opacity:0.4">Built for the love of learning. Not every project needs to ship &mdash; some just need to teach.</p>
+    </div>
+  </div>
+
+  <!-- ===== GAMES PAGE ===== -->
+  <div id="page-games" class="page">
+    <div class="page-content">
+      <h2 style="font-family:var(--heading);font-size:clamp(1.3rem,3.5vw,2rem);margin-bottom:8px">Games</h2>
+      <p style="font-size:13px;opacity:0.7;margin-bottom:24px">Six Newton School block-coding games, each with different mechanics, block sets, and challenge curves.</p>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="tag">Levels 1-10</span>
+          <span style="font-weight:600;font-size:15px">Duck Duck Go!</span>
+        </div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:8px">
+          Guide a duck to collect a ball across a grid. Early levels use only forward/repeat blocks. Later levels introduce turns, conditionals (if/else), and tighter block budgets.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+          <div><span style="opacity:0.5">Goal:</span> ball.png</div>
+          <div><span style="opacity:0.5">Blocks:</span> forward, turn, repeat, if/else</div>
+          <div><span style="opacity:0.5">Terrain:</span> rock (wall), bush (path), glass (hazard)</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="tag">Levels 1-7</span>
+          <span style="font-weight:600;font-size:15px">Mouse wants Laddoo</span>
+        </div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:8px">
+          Navigate a mouse to a laddoo (sweet). Unique floor/tile terrain system where floor tiles are walls and tile variants are paths. Uses fixed_repeat blocks with if-do conditionals.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+          <div><span style="opacity:0.5">Goal:</span> laddoo.png</div>
+          <div><span style="opacity:0.5">Blocks:</span> forward, turn, fixed_repeat, if-do</div>
+          <div><span style="opacity:0.5">Terrain:</span> floor (wall), tile (path)</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="tag">Levels 1-10</span>
+          <span style="font-weight:600;font-size:15px">Turtle Tracer</span>
+        </div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:8px">
+          Steer a turtle through obstacle courses. Distinct terrain system using colored markers. Emphasizes turn optimization and path sequencing with limited block budgets.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+          <div><span style="opacity:0.5">Goal:</span> burger.png</div>
+          <div><span style="opacity:0.5">Blocks:</span> forward, turn, repeat</div>
+          <div><span style="opacity:0.5">Terrain:</span> floor markers, colored tiles</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="tag">Levels 1-8</span>
+          <span style="font-weight:600;font-size:15px">Boat to the Shore</span>
+        </div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:8px">
+          Navigate a boat carrying a passenger to shore. Features water tiles, boat-specific terrain, and the passenger goal sprite. Introduces repeat_until blocks.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+          <div><span style="opacity:0.5">Goal:</span> passenger.png / shore.png</div>
+          <div><span style="opacity:0.5">Blocks:</span> forward, turn, repeat_until</div>
+          <div><span style="opacity:0.5">Terrain:</span> water, boat landing, shore</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="tag">Levels 1-6</span>
+          <span style="font-weight:600;font-size:15px">A Friend In Need</span>
+        </div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:8px">
+          Similar structure to other navigation games but with its own terrain palette and block constraints. Uses the burger goal and introduces tighter block budgets at higher levels.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+          <div><span style="opacity:0.5">Goal:</span> burger.png</div>
+          <div><span style="opacity:0.5">Blocks:</span> forward, turn, repeat, if/else</div>
+          <div><span style="opacity:0.5">Terrain:</span> mixed ground/stone tiles</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span class="tag">Levels 1-6</span>
+          <span style="font-weight:600;font-size:15px">Hungry Duck</span>
+        </div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:8px">
+          Same underlying engine as Duck Duck Go but with a hamburger goal. Shares block types and terrain mechanics. Useful for cross-validating the solver's terrain detection against different asset filenames.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+          <div><span style="opacity:0.5">Goal:</span> burger.png</div>
+          <div><span style="opacity:0.5">Blocks:</span> forward, turn, repeat, if/else</div>
+          <div><span style="opacity:0.5">Terrain:</span> rock (wall), bush (path), glass (hazard)</div>
+        </div>
+      </div>
+
+      <div style="font-size:12px;opacity:0.6;margin-top:20px">
+        <strong>Cross-game note:</strong> Terrain mapping is game-specific. For example, <code>floor.png</code> is a <em>wall</em> in mouse-laddoo but a <em>path</em> in duck-ball. The solver handles this via game-specific override blocks in <code>readGameState()</code>.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOG PAGE ===== -->
+  <div id="page-log" class="page">
+    <div class="page-content">
+      <h2 style="font-family:var(--heading);font-size:clamp(1.3rem,3.5vw,2rem);margin-bottom:8px">Dev Log</h2>
+      <p style="font-size:13px;opacity:0.7;margin-bottom:24px">Chronological record of difficulties encountered, how they were solved, and what's still broken.</p>
+
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
+          <span class="log-date">2026-05-28</span>
+          <span class="log-status log-current">OPEN</span>
+        </div>
+        <p style="font-weight:600;font-size:13px;margin-bottom:4px">Wall-follower repeat count overshoots the goal</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Problem:</strong> The maze solver's wall-follower algorithm sets a repeat count of 10 iterations, but the level only needs 8 forward moves. The extra 2 iterations cause the character to walk past the goal and fail.
+        </p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Root cause:</strong> The simulation counts turns as separate steps, but the generated code folds conditional turns into forward iterations. The repeat count needs to be the number of forward moves, not simulation steps.
+        </p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.5">
+          <strong>Fix status:</strong> Not yet fixed. Need to compute forward-only step count in <code>simulateWallFollower()</code> and pass it to the repeat count.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
+          <span class="log-date">2026-05-28</span>
+          <span class="log-status log-current">OPEN</span>
+        </div>
+        <p style="font-weight:600;font-size:13px;margin-bottom:4px">Player direction detection fallback may be wrong</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Problem:</strong> <code>detectInitialDirection()</code> returns direction 2 (down) as fallback for mouse-laddoo, when the mouse sprite actually faces right (direction 1).
+        </p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Attempted fix:</strong> Added CSS class rotation detection (<code>rotateimg270</code> etc.) which correctly detects right-facing, but the fallback path when no sprite icon is found still defaults to the wrong value.
+        </p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.5">
+          <strong>Fix status:</strong> Works when sprite icon has rotation CSS class. Needs robust fallback when icon element structure differs.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
+          <span class="log-date">2026-05-27</span>
+          <span class="log-status log-resolved">FIXED</span>
+        </div>
+        <p style="font-weight:600;font-size:13px;margin-bottom:4px">DOM grid cell ordering inconsistent across games</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Problem:</strong> The BFS pathfinder returned paths that didn't match the visual grid because <code>&lt;img&gt;</code> elements in some games were ordered top-to-bottom while others were left-to-right.
+        </p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Fix:</strong> Used CSS Grid's computed <code>grid-template-columns</code> to detect column count, then arrange cells row-by-row. Fall back to bounding box positions if CSS grid info is unavailable.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
+          <span class="log-date">2026-05-26</span>
+          <span class="log-status log-resolved">FIXED</span>
+        </div>
+        <p style="font-weight:600;font-size:13px;margin-bottom:4px">Block injection cleared workspace but blocks didn't render</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Problem:</strong> <code>workspace.clear()</code> removed blocks but <code>workspace.newBlock()</code> created invisible blocks. The React-managed Blockly workspace needed additional fiber tree interaction to refresh.
+        </p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Fix:</strong> Found workspace via React fiber tree walk, used <code>workspace.newBlock()</code> + <code>.initSvg()</code> + <code>.render()</code> + <code>workspace.render()</code> sequence. Connected blocks programmatically before calling top-level render.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
+          <span class="log-date">2026-05-25</span>
+          <span class="log-status log-resolved">FIXED</span>
+        </div>
+        <p style="font-weight:600;font-size:13px;margin-bottom:4px">Extension not injecting solver on page load</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Problem:</strong> Content script injected <code>solver.js</code> via a &lt;script&gt; tag, but the browser CSP blocked execution. The solver functions were not available when the popup tried to call them.
+        </p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Fix:</strong> Listed <code>solver.js</code> as a web_accessible_resource in manifest.json and inserted it as a <code>&lt;script src="chrome-extension://..."&gt;</code> tag. Added <code>__ngs_solver_injected</code> flag to prevent double injection.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:6px">
+          <span class="log-date">2026-05-24</span>
+          <span class="log-status log-resolved">FIXED</span>
+        </div>
+        <p style="font-weight:600;font-size:13px;margin-bottom:4px">Terrain filenames URL-encoded differently per game</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Problem:</strong> Some games URL-encode spaces as <code>%20</code> in image <code>src</code> attributes while others use raw filenames. The terrain map lookup failed for encoded names.
+        </p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.75">
+          <strong>Fix:</strong> Applied <code>decodeURIComponent()</code> before the terrain lookup. Lowercased filenames for case-insensitive matching.
+        </p>
+      </div>
+
+      <div style="font-size:12px;opacity:0.6;margin-top:20px">
+        <strong>Known issues:</strong> Wall-follower repeat count, direction detection fallback, and conditional block generation for complex mazes (levels with if/else and multiple branches).
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FEEDBACK PAGE ===== -->
+  <div id="page-feedback" class="page">
+    <div class="page-content" style="max-width:600px">
+      <h2 style="font-family:var(--heading);font-size:clamp(1.3rem,3.5vw,2rem);margin-bottom:8px">Feedback</h2>
+      <p style="font-size:13px;opacity:0.7;margin-bottom:24px">Suggestions, bug reports, or just saying hi. All anonymous &mdash; a random username is generated for you.</p>
+
+      <div id="feedbackForm" style="margin-bottom:28px">
+        <textarea id="feedbackInput" class="fb-input" placeholder="What's on your mind? Suggestions for the solver, game levels you want fixed, ideas for the project..." style="margin-bottom:10px"></textarea>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span id="feedbackUserBadge" style="font-size:12px;opacity:0.6">Posting as: <strong id="randomUsername" style="color:var(--accent)">...</strong></span>
+          <button id="submitFeedback" class="submit-btn" disabled>Submit</button>
+        </div>
+      </div>
+
+      <div id="feedbackList" style="border-top:1px solid var(--border);padding-top:16px">
+        <p style="font-size:12px;opacity:0.5;text-align:center">No feedback yet. Be the first!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REPO PAGE ===== -->
+  <div id="page-repo" class="page">
+    <div class="page-content">
+      <h2 style="font-family:var(--heading);font-size:clamp(1.3rem,3.5vw,2rem);margin-bottom:8px">Code Breakdown</h2>
+      <p style="font-size:13px;opacity:0.7;margin-bottom:24px">Detailed walkthrough of every file in the project.</p>
+
+      <div class="card">
+        <div class="file-header"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> manifest.json</div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:6px">Chrome Extension Manifest V3 configuration.</p>
+        <pre style="font-size:11px">{
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://learn.newtonschool.co/*",
+    "https://my.newtonschool.co/*"
+  ],
+  "content_scripts": [{
+    "matches": ["https://learn.newtonschool.co/block-games/*",
+                "https://my.newtonschool.co/playground/game/*"],
+    "js": ["content.js"],
+    "run_at": "document_end"
+  }],
+  "web_accessible_resources": [{
+    "resources": ["solver.js"],
+    "matches": ["https://learn.newtonschool.co/*",
+                "https://my.newtonschool.co/*"]
+  }]
+}</pre>
+        <p style="font-size:12px;line-height:1.6;opacity:0.7">Defines permissions, content script injection, and exposes <code>solver.js</code> as a web-accessible resource so the isolated-world content script can inject it into the page's main world.</p>
+      </div>
+
+      <div class="card">
+        <div class="file-header"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> content.js</div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:6px">Isolated-world content script that bridges the extension popup and the main-world solver.</p>
+        <pre style="font-size:11px">// Listens for messages from popup
+// Injects solver.js into the main world
+// Relays solver results back to popup
+// Handles: status check, solve request, result retrieval</pre>
+        <p style="font-size:12px;line-height:1.6;opacity:0.7">The script creates a <code>&lt;script&gt;</code> tag pointing to the web-accessible <code>solver.js</code> and appends it to the page body. It listens for <code>__ngs_solver_result</code> postMessage events from the solver and stores the result for the popup. Responds to three message actions: <code>status</code> (is solver loaded?), <code>solve</code> (trigger auto-solve), <code>getResult</code> (retrieve stored result).</p>
+      </div>
+
+      <div class="card">
+        <div class="file-header"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> solver.js (47 KB)</div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:6px">The core solver engine &mdash; self-contained IIFE that runs in the page's main world.</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.7;margin-bottom:8px">Key functions:</p>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+          <div><code>readGameState()</code> &mdash; Parses the DOM grid, detects terrain from image filenames, locates player and goal sprites by bounding box.</div>
+          <div><code>findPath()</code> &mdash; BFS pathfinder that computes shortest path from player to goal, avoiding walls and hazards. Handles goal-on-wall edge case.</div>
+          <div><code>buildBlockSequence()</code> &mdash; Converts path directions into optimized block sequences. Uses pattern-finding to compress repeated moves into repeat blocks.</div>
+          <div><code>simulateWallFollower()</code> &mdash; Right-hand-rule maze solver with cycle detection. Generates conditional programs (if path not ahead → turn right → forward).</div>
+          <div><code>detectInitialDirection()</code> &mdash; Determines player facing by checking CSS transforms, rotation classes, and game-specific fallbacks.</div>
+          <div><code>injectBlocks()</code> &mdash; Walks the React fiber tree of the Blockly workspace, clears existing blocks, creates and connects new blocks programmatically.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="file-header"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> popup.html + popup.js</div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:6px">Extension popup UI with auto-solve trigger, status display, and grid preview.</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.7">
+          <code>popup.html</code> defines a dark-themed popup with status indicator, solve button, result area, and map preview grid.<br />
+          <code>popup.js</code> communicates with the content script via <code>chrome.tabs.sendMessage</code>. On page load, it queries solver status. On solve click, it triggers auto-solve and displays the result including path length, injection success, and a color-coded grid preview.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="file-header"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> README.md</div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:6px">Project documentation covering installation, usage, architecture, and limitations.</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.7">
+          Documents the dual-world architecture (content script bridges isolated and main worlds), grid detection approach, Blockly workspace access via React fiber tree, and known limitations including wall-follower bugs and terrain mapping fragility.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="file-header"><svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> index.html (this page)</div>
+        <p style="font-size:12px;line-height:1.6;opacity:0.8;margin-bottom:6px">Project hub &mdash; SPA with status, games, dev log, feedback, and code breakdown.</p>
+        <p style="font-size:12px;line-height:1.6;opacity:0.7">
+          Pure vanilla JS/CSS with hash-based routing, dark mode toggle, anonymous feedback system (localStorage), and detailed documentation of the entire project. Designed to be hosted on GitHub Pages or Netlify.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ===== DARK MODE =====
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const savedTheme = localStorage.getItem('theme');
+let dark = savedTheme ? savedTheme === 'dark' : prefersDark;
+
+function applyTheme() {
+  document.documentElement.classList.toggle('dark', dark);
+  document.getElementById('sunIcon').style.display = dark ? 'none' : 'block';
+  document.getElementById('moonIcon').style.display = dark ? 'block' : 'none';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+}
+applyTheme();
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+  dark = !dark;
+  applyTheme();
+});
+
+// ===== HASH ROUTING =====
+const pages = ['status','games','log','feedback','repo'];
+
+function navigate(hash) {
+  const target = hash.replace('#','') || 'status';
+  pages.forEach(p => {
+    const el = document.getElementById('page-' + p);
+    if (el) el.classList.toggle('active', p === target);
+  });
+  // Highlight nav link
+  document.querySelectorAll('.nav-link').forEach(a => {
+    const isActive = a.getAttribute('href') === '#' + target;
+    a.style.color = isActive ? 'var(--accent)' : 'var(--text-muted)';
+    a.style.background = isActive ? 'var(--accent-light)' : 'transparent';
+  });
+}
+
+window.addEventListener('hashchange', () => navigate(window.location.hash));
+navigate(window.location.hash || '#status');
+
+// ===== MOBILE MENU =====
+const backdrop = document.getElementById('backdrop');
+const sheet = document.getElementById('sheet');
+const menuBtn = document.getElementById('menuBtn');
+
+function openMenu() {
+  backdrop.classList.add('open');
+  sheet.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMenu() {
+  backdrop.classList.remove('open');
+  sheet.classList.remove('open');
+  document.body.style.overflow = '';
+}
+window.openMenu = openMenu;
+window.closeMenu = closeMenu;
+menuBtn.addEventListener('click', openMenu);
+
+// Populate mobile menu
+const navItems = ['Status', 'Games', 'Log', 'Feedback', 'Repo'];
+const slugs = ['status','games','log','feedback','repo'];
+const menuContainer = document.getElementById('menuItems');
+navItems.forEach((item, i) => {
+  const el = document.createElement('a');
+  el.textContent = item;
+  el.href = '#' + slugs[i];
+  el.style.cssText = 'display:block;padding:14px 0;font-size:15px;font-weight:500;cursor:pointer;border-bottom:1px solid var(--border);opacity:0;transform:translateX(20px);transition:opacity 0.4s cubic-bezier(0.22,1,0.36,1),transform 0.4s cubic-bezier(0.22,1,0.36,1);text-decoration:none;color:inherit';
+  el.onclick = closeMenu;
+  menuContainer.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '1';
+    el.style.transform = 'translateX(0)';
+  }, 180 + i * 70);
+});
+
+// ===== FEEDBACK SYSTEM =====
+const adjectives = ['Swift','Calm','Bold','Crisp','Neon','Lunar','Solar','Wild','Quiet','Rapid','Deep','Bright','Fuzzy','Keen','Noble','Prime','Rare','Safe','Epic','Zen'];
+const nouns = ['Panda','Fox','Owl','Wolf','Hawk','Elk','Bear','Crab','Moth','Seal','Finch','Lynx','Wren','Dove','Oryx','Tern','Ibex','Mole','Buck','Crow'];
+
+function randomUsername() {
+  return adjectives[Math.floor(Math.random() * adjectives.length)] + nouns[Math.floor(Math.random() * nouns.length)] + Math.floor(Math.random() * 99);
+}
+
+function loadFeedback() {
+  try { return JSON.parse(localStorage.getItem('ngs_feedback') || '[]'); }
+  catch { return []; }
+}
+
+function saveFeedback(fb) {
+  localStorage.setItem('ngs_feedback', JSON.stringify(fb));
+}
+
+function renderFeedback() {
+  const list = document.getElementById('feedbackList');
+  const fb = loadFeedback();
+  if (fb.length === 0) {
+    list.innerHTML = '<p style="font-size:12px;opacity:0.5;text-align:center;padding:20px 0">No feedback yet. Be the first!</p>';
+    return;
+  }
+  list.innerHTML = fb.slice().reverse().map(f => `
+    <div class="feedback-item">
+      <div class="feedback-user">${f.user}</div>
+      <div class="feedback-text">${escapeHtml(f.text)}</div>
+      <div class="feedback-date">${f.date}</div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Set random username
+let currentUser = randomUsername();
+document.getElementById('randomUsername').textContent = currentUser;
+
+// Enable submit when text is entered
+const fbInput = document.getElementById('feedbackInput');
+const fbSubmit = document.getElementById('submitFeedback');
+
+fbInput.addEventListener('input', () => {
+  fbSubmit.disabled = fbInput.value.trim().length < 3;
+});
+
+fbSubmit.addEventListener('click', () => {
+  const text = fbInput.value.trim();
+  if (text.length < 3) return;
+  const fb = loadFeedback();
+  fb.push({ user: currentUser, text, date: new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) + ' ' + new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' }) });
+  saveFeedback(fb);
+  fbInput.value = '';
+  fbSubmit.disabled = true;
+  currentUser = randomUsername();
+  document.getElementById('randomUsername').textContent = currentUser;
+  renderFeedback();
+});
+
+renderFeedback();
+</script>
+</body>
+</html>

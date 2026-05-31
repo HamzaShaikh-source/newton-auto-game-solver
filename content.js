@@ -61,7 +61,13 @@
       return true;
     }
     if (msg.action === 'status') {
-      sendResponse({ ready: solverInjected, hasResult: !!pendingResult });
+      const gameName = window.location.href.includes('mouse-laddoo') ? 'Mouse Laddoo' :
+                       window.location.href.includes('duck-ball') ? 'Duck Duck Go' :
+                       window.location.href.includes('turtle-tracer') ? 'Turtle Tracer' :
+                       window.location.href.includes('boat-to-the-shore') ? 'Boat to the Shore' :
+                       window.location.href.includes('friend-in-need') ? 'A Friend In Need' :
+                       window.location.href.includes('hungry-duck') ? 'Hungry Duck' : null;
+      sendResponse({ ready: solverInjected, hasResult: !!pendingResult, gameName });
       return true;
     }
     if (msg.action === 'getResult') {
