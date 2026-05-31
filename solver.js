@@ -97,17 +97,15 @@
 
   function countBlocks(blocks) {
     if (blocks.type === 'repeat_n') {
-      return 1;
+      return 1 + (blocks.body ? blocks.body.length : 0);
     }
     if (blocks.type === 'sequence') {
       return blocks.blocks.length;
     }
     if (blocks.type === 'mixed') {
-      let count = 0;
-      for (const part of blocks.parts) {
-        count += (typeof part === 'object' && part.type === 'repeat_n') ? 1 : 1;
-      }
-      return count;
+      return blocks.parts.reduce((c, p) => {
+        return c + (typeof p === 'object' && p.type === 'repeat_n' ? 1 + (p.body ? p.body.length : 0) : 1);
+      }, 0);
     }
     return 0;
   }
@@ -218,7 +216,6 @@
 
   function findRepeatType(available) {
     if (available.includes('fixed_repeat')) return 'fixed_repeat';
-    if (available.includes('repeat_block')) return 'repeat_block';
     if (available.includes('controls_repeat')) return 'controls_repeat';
     return null;
   }
@@ -373,11 +370,6 @@
     const repeatType = findRepeatType(available);
     const hasRepeat = !!repeatType;
 
-    if (!hasTurnLeft && !hasTurnRight) {
-      const seq = { type: 'sequence', blocks: dirs.map(() => 'forward') };
-      return seq;
-    }
-
     let facing = detectInitialDirection();
     const ops = [];
 
@@ -399,6 +391,34 @@
     }
 
     if (hasRepeat) {
+      if (ops.every(o => o === 'forward')) {
+        return { type: 'repeat_n', count: ops.length, body: [{ type: 'move_forward' }] };
+      }
+
+      if (budget !== null) {
+        let best = null;
+        for (let i = 0; i < ops.length; i++) {
+          let run = 0;
+          while (i + run < ops.length && ops[i + run] === 'forward') run++;
+          if (run >= 2 && (!best || run > best.len)) best = { start: i, len: run };
+          i += Math.max(run, 1);
+        }
+        if (best && best.len >= 2) {
+          const parts = [];
+          let i = 0;
+          while (i < ops.length) {
+            if (i === best.start) {
+              parts.push({ type: 'repeat_n', count: best.len, body: [{ type: 'move_forward' }] });
+              i += best.len;
+            } else {
+              parts.push(ops[i]);
+              i++;
+            }
+          }
+          return { type: 'mixed', parts };
+        }
+      }
+
       let bestStart = -1, bestLen = 0, curStart = -1, curLen = 0;
       for (let i = 0; i < ops.length; i++) {
         if (ops[i] === 'forward') {
@@ -410,25 +430,6 @@
         }
       }
       if (curLen > bestLen && curLen > 2) { bestStart = curStart; bestLen = curLen; }
-
-      // If budget is tight, try more aggressive repeat usage
-      if (budget !== null) {
-        let fullRepeat = true;
-        let i = 0;
-        while (i < ops.length) {
-          if (ops[i] === 'forward') {
-            let run = 0;
-            while (i + run < ops.length && ops[i + run] === 'forward') run++;
-            if (run <= 2) { fullRepeat = false; break; }
-            i += run;
-          } else {
-            i++;
-          }
-        }
-        if (fullRepeat) {
-          return { type: 'repeat_n', count: ops.filter(o => o === 'forward').length, body: [{ type: 'move_forward' }] };
-        }
-      }
 
       if (bestStart !== -1) {
         const parts = [];
