@@ -121,13 +121,16 @@
 
     const TURN_PENALTY = 0.5;
 
+    let effectiveGoal = { x: goal.x, y: goal.y };
+    const goalIsBlocked = grid[goal.y][goal.x] === 'wall' || grid[goal.y][goal.x] === 'hazard';
+
     while (open.length > 0) {
       open.sort((a, b) => cost[a.y][a.x] - cost[b.y][b.x]);
       const cur = open.shift();
       if (cost[cur.y][cur.x] === Infinity) break;
-      if (cur.x === goal.x && cur.y === goal.y) {
+      if (cur.x === effectiveGoal.x && cur.y === effectiveGoal.y) {
         const path = [];
-        let cx = goal.x, cy = goal.y;
+        let cx = effectiveGoal.x, cy = effectiveGoal.y;
         while (cx !== player.x || cy !== player.y) {
           path.unshift({ x: cx, y: cy });
           const p = prev[cy][cx];
@@ -141,7 +144,7 @@
         const nx = cur.x + dx, ny = cur.y + dy;
         if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
         const isGoal = nx === goal.x && ny === goal.y;
-        if (grid[ny][nx] === 'wall' && !isGoal) continue;
+        if ((grid[ny][nx] === 'wall' || grid[ny][nx] === 'hazard') && !isGoal) continue;
         const turnCost = (cur.dir !== -1 && cur.dir !== di) ? TURN_PENALTY : 0;
         const nc = cost[cur.y][cur.x] + 1 + turnCost;
         if (nc < cost[ny][nx]) {
@@ -149,6 +152,31 @@
           prev[ny][nx] = { x: cur.x, y: cur.y };
           open.push({ x: nx, y: ny, dir: di });
         }
+      }
+    }
+
+    if (goalIsBlocked) {
+      let bestAdj = null, bestDist = Infinity;
+      for (let di = 0; di < dirs.length; di++) {
+        const [dx, dy] = dirs[di];
+        const nx = goal.x + dx, ny = goal.y + dy;
+        if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
+        if (cost[ny][nx] < bestDist && grid[ny][nx] !== 'wall' && grid[ny][nx] !== 'hazard') {
+          bestDist = cost[ny][nx];
+          bestAdj = { x: nx, y: ny };
+        }
+      }
+      if (bestAdj) {
+        effectiveGoal = bestAdj;
+        const path = [];
+        let cx = bestAdj.x, cy = bestAdj.y;
+        while (cx !== player.x || cy !== player.y) {
+          path.unshift({ x: cx, y: cy });
+          const p = prev[cy][cx];
+          cx = p.x; cy = p.y;
+        }
+        path.unshift({ x: player.x, y: player.y });
+        return path;
       }
     }
     return null;
@@ -396,25 +424,23 @@
       }
 
       if (budget !== null) {
-        let best = null;
-        for (let i = 0; i < ops.length; i++) {
+        const runs = [];
+        let ri = 0;
+        while (ri < ops.length) {
           let run = 0;
-          while (i + run < ops.length && ops[i + run] === 'forward') run++;
-          if (run >= 2 && (!best || run > best.len)) best = { start: i, len: run };
-          i += Math.max(run, 1);
+          while (ri + run < ops.length && ops[ri + run] === 'forward') run++;
+          if (run >= 2) runs.push({ start: ri, len: run });
+          ri += Math.max(run, 1);
         }
-        if (best && best.len >= 2) {
+        if (runs.length > 0) {
           const parts = [];
           let i = 0;
-          while (i < ops.length) {
-            if (i === best.start) {
-              parts.push({ type: 'repeat_n', count: best.len, body: [{ type: 'move_forward' }] });
-              i += best.len;
-            } else {
-              parts.push(ops[i]);
-              i++;
-            }
+          for (const run of runs) {
+            while (i < run.start) { parts.push(ops[i]); i++; }
+            parts.push({ type: 'repeat_n', count: run.len, body: [{ type: 'move_forward' }] });
+            i += run.len;
           }
+          while (i < ops.length) { parts.push(ops[i]); i++; }
           return { type: 'mixed', parts };
         }
       }
